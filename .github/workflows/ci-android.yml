@@ -40,10 +40,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # the action's default is "tools platform-tools", but the obsolete
-          # "tools" package was removed from the SDK repository, so sdkmanager
-          # exits 1 with `Failed to find package 'tools'` and the job dies
-          # before Gradle ever runs.
           packages: platform-tools
       - name: Accept Licenses
         run: yes | sdkmanager --licenses
