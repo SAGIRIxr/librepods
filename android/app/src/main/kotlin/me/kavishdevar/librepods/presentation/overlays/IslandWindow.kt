@@ -44,9 +44,10 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import me.kavishdevar.librepods.data.app.Design
 import me.kavishdevar.librepods.database.app.AppSettingsEntity
 import me.kavishdevar.librepods.presentation.design.LibrePodsTheme
-import me.kavishdevar.librepods.presentation.design.NightTheme
+import me.kavishdevar.librepods.data.app.NightTheme
 import me.kavishdevar.librepods.services.LibrePodsAccessibilityService
 import kotlin.math.roundToInt
 
@@ -70,7 +71,7 @@ class IslandWindow(
 ) {
     private var windowManager: WindowManager = context.getSystemService(WindowManager::class.java)
     private var composeView: ComposeView? = null
-    private var lifecycleOwner: OverlayLifecycleOwner? = null
+    private var lifecycleOwner: IslandLifecycleOwner? = null
 
     private var autoCloseHandler: Handler? = null
     private var autoCloseRunnable: Runnable? = null
@@ -275,7 +276,7 @@ class IslandWindow(
     }
 
     private fun setupComposeView() {
-        lifecycleOwner = OverlayLifecycleOwner()
+        lifecycleOwner = IslandLifecycleOwner()
 
         composeView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -292,8 +293,12 @@ class IslandWindow(
                 }
 
                 LibrePodsTheme(
-                    designSystem = currentAppSettings.designSystem,
-                    overrideMaterialColor = currentAppSettings.overrideMaterialColor,
+                    design = Design(
+                        system = currentAppSettings.designSystem,
+                        colorStyle = currentAppSettings.colorStyle,
+                        overrideMaterialColor = currentAppSettings.overrideMaterialColor,
+                        contrastLevel = currentAppSettings.contrastLevel
+                    ),
                     accessibilitySettings = currentAppSettings.accessibilitySettings,
                     fontSettings = currentAppSettings.fontSettings,
                     darkTheme = darkTheme
@@ -335,6 +340,7 @@ class IslandWindow(
         autoCloseRunnable = Runnable {
             if (appSettings.islandSettings.keepCompactVisible) {
                 islandState = IslandState.COMPACT
+                updateWindowParams(islandState)
             } else {
                 close()
             }
@@ -350,6 +356,7 @@ class IslandWindow(
 
         autoCloseRunnable?.let { autoCloseHandler?.removeCallbacks(it) }
         islandState = IslandState.CLOSE
+        updateWindowParams(islandState)
     }
 
     private fun cleanupAndRemoveView() {
@@ -370,7 +377,7 @@ class IslandWindow(
     }
 }
 
-private class OverlayLifecycleOwner: LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
+private class IslandLifecycleOwner: LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     private val store = ViewModelStore()
 

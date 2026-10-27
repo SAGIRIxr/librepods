@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.stringResource
@@ -47,8 +48,10 @@ import androidx.compose.ui.unit.dp
 import me.kavishdevar.librepods.R
 import me.kavishdevar.librepods.core.devices.Battery
 import me.kavishdevar.librepods.core.devices.BatteryComponent
+import me.kavishdevar.librepods.core.devices.BatterySource
 import me.kavishdevar.librepods.core.devices.BatteryStatus
-import me.kavishdevar.librepods.presentation.design.DesignSystem
+import me.kavishdevar.librepods.data.app.Design
+import me.kavishdevar.librepods.data.app.DesignSystem
 import me.kavishdevar.librepods.presentation.design.LibrePodsTheme
 import me.kavishdevar.librepods.core.R as coreR
 
@@ -56,7 +59,8 @@ import me.kavishdevar.librepods.core.R as coreR
 fun BatteryView(
     batteryList: Set<Battery>,
     @DrawableRes primaryImageRes: Int,
-    @DrawableRes caseImageRes: Int?
+    @DrawableRes caseImageRes: Int?,
+    surfaceColor: Color = Color.Unspecified
 ) {
     Row(
         modifier = Modifier
@@ -127,7 +131,8 @@ fun BatteryView(
                     ) {
                         BatteryIndicator(
                             leftLevel.coerceAtMost(rightLevel),
-                            left?.status ?: BatteryStatus.NOT_CHARGING
+                            left?.status ?: BatteryStatus.NOT_CHARGING,
+                            surfaceColor = surfaceColor
                         )
                         singleDisplayed.value = true
                     } else {
@@ -141,7 +146,8 @@ fun BatteryView(
                                 BatteryIndicator(
                                     leftLevel,
                                     left?.status ?: BatteryStatus.NOT_CHARGING,
-                                    "LeftCircleFill"
+                                    "LeftCircleFill",
+                                    surfaceColor = surfaceColor
                                 )
                             }
 
@@ -153,7 +159,8 @@ fun BatteryView(
                                 BatteryIndicator(
                                     rightLevel,
                                     right?.status ?: BatteryStatus.NOT_CHARGING,
-                                    "RightCircleFill"
+                                    "RightCircleFill",
+                                    surfaceColor = surfaceColor
                                 )
                             }
                         }
@@ -188,7 +195,8 @@ fun BatteryView(
                     BatteryIndicator(
                         caseLevel,
                         case?.status ?: BatteryStatus.NOT_CHARGING,
-                        if (!singleDisplayed.value) "AirPodsPro3CaseFill" else null
+                        if (!singleDisplayed.value) "AirPodsPro3CaseFill" else null,
+                        surfaceColor = surfaceColor
                     )
                 }
             }
@@ -201,13 +209,15 @@ fun BatteryView(
 @Composable
 fun BatteryViewPreview() {
     val fakeBattery = setOf(
-        Battery(BatteryComponent.LEFT, 85, BatteryStatus.CHARGING),
-        Battery(BatteryComponent.RIGHT, 40, BatteryStatus.OPTIMIZED_CHARGING),
-        Battery(BatteryComponent.CASE, 60, BatteryStatus.NOT_CHARGING)
+        Battery(BatteryComponent.LEFT, 85, BatteryStatus.CHARGING, BatterySource.AACP),
+        Battery(BatteryComponent.RIGHT, 40, BatteryStatus.OPTIMIZED_CHARGING, BatterySource.AACP),
+        Battery(BatteryComponent.CASE, 60, BatteryStatus.NOT_CHARGING, BatterySource.AACP)
     )
 
     LibrePodsTheme(
-        designSystem = DesignSystem.Apple
+        design = Design(
+            system = DesignSystem.Apple,
+        )
     ) {
         Box(
             modifier = Modifier
@@ -227,10 +237,12 @@ fun BatteryViewPreview() {
 @Composable
 fun BatteryViewHeadsetPreview() {
     LibrePodsTheme(
-        designSystem = DesignSystem.Apple
+        design = Design(
+            system = DesignSystem.Apple
+        )
     ) {
         val fakeBatteryHeadset = setOf(
-            Battery(BatteryComponent.HEADSET, 50, BatteryStatus.CHARGING),
+            Battery(BatteryComponent.HEADSET, 50, BatteryStatus.CHARGING, BatterySource.AACP),
         )
 
         Box(

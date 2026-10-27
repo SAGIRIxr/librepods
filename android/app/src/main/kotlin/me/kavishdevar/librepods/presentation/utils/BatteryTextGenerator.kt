@@ -1,6 +1,8 @@
 package me.kavishdevar.librepods.presentation.utils
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import me.kavishdevar.librepods.R
 import me.kavishdevar.librepods.core.devices.AirPodsSpec
 import me.kavishdevar.librepods.core.devices.Battery
 import me.kavishdevar.librepods.core.devices.BatteryComponent
@@ -84,6 +86,8 @@ fun createAirPodsBatteryRichText(
     return richText(
         if (left != null && right != null && case != null) {
             "$budsBatteryText  $caseBatteryText"
+        } else if (case != null) {
+            caseBatteryText
         } else {
             if (headset != null) {
                 val statusIcon = when (headset.status) {
@@ -91,9 +95,9 @@ fun createAirPodsBatteryRichText(
                     BatteryStatus.NOT_CHARGING -> "\\icon{Circle}"
                     BatteryStatus.UNKNOWN, BatteryStatus.DISCONNECTED -> "\\icon{CircleDotted}"
                 }
-                headsetIconName + statusIcon + " ${headsetLevel}%"
+                "\\icon{$headsetIconName} " + statusIcon + " ${headsetLevel}%"
             } else {
-                "No battery info available"
+                stringResource(R.string.battery_not_available)
             }
         }
     )
