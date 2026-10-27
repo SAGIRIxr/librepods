@@ -12,9 +12,9 @@ import kotlinx.coroutines.channels.Channel
 import me.kavishdevar.librepods.R
 import me.kavishdevar.librepods.core.bluetooth.MacAddress
 import me.kavishdevar.librepods.core.bluetooth.aacp.types.ControlCommandIdentifier
-import me.kavishdevar.librepods.data.updates.updates
 import me.kavishdevar.librepods.core.devices.AppleDevice
 import me.kavishdevar.librepods.core.devices.Device
+import me.kavishdevar.librepods.data.updates.updates
 import me.kavishdevar.librepods.presentation.screens.DeviceListScreen
 import me.kavishdevar.librepods.presentation.screens.OpenSourceLicensesScreen
 import me.kavishdevar.librepods.presentation.screens.PurchaseScreen
@@ -31,6 +31,8 @@ import me.kavishdevar.librepods.presentation.screens.apple.HearingProtectionScre
 import me.kavishdevar.librepods.presentation.screens.apple.HeartRateRoute
 import me.kavishdevar.librepods.presentation.screens.apple.LongPress
 import me.kavishdevar.librepods.presentation.screens.apple.MicrophoneSettingsRoute
+import me.kavishdevar.librepods.presentation.screens.apple.OverlaySettingsRoute
+import me.kavishdevar.librepods.presentation.screens.apple.ProxConnectSettingsRoute
 import me.kavishdevar.librepods.presentation.screens.apple.RecordingScreenRoute
 import me.kavishdevar.librepods.presentation.screens.apple.RenameScreen
 import me.kavishdevar.librepods.presentation.screens.apple.TransparencySettingsScreen
@@ -38,14 +40,18 @@ import me.kavishdevar.librepods.presentation.screens.apple.UpdateHearingTestRout
 import me.kavishdevar.librepods.presentation.screens.apple.VersionScreen
 import me.kavishdevar.librepods.presentation.screens.onboarding.OnboardingScreen
 import me.kavishdevar.librepods.presentation.screens.settings.AppAccessibilitySettingsRoute
-import me.kavishdevar.librepods.presentation.screens.settings.AppAppearanceSettingsRoute
 import me.kavishdevar.librepods.presentation.screens.settings.AppSettingsScreen
 import me.kavishdevar.librepods.presentation.screens.settings.BLESettingsScreenRoute
-import me.kavishdevar.librepods.presentation.screens.settings.IslandSettingsRoute
+import me.kavishdevar.librepods.presentation.screens.settings.appearance.AppAppearanceSettingsRoute
+import me.kavishdevar.librepods.presentation.screens.settings.appearance.AppColorSettingsRoute
+import me.kavishdevar.librepods.presentation.screens.settings.appearance.HazeSettingsRoute
 import me.kavishdevar.librepods.presentation.screens.settings.island.IslandCompactCustomizeRoute
 import me.kavishdevar.librepods.presentation.screens.settings.island.IslandCompactSizeAndPositionRoute
 import me.kavishdevar.librepods.presentation.screens.settings.island.IslandExpandedCustomizeRoute
 import me.kavishdevar.librepods.presentation.screens.settings.island.IslandExpandedSizeAndPositionRoute
+import me.kavishdevar.librepods.presentation.screens.settings.island.IslandSettingsRoute
+import me.kavishdevar.librepods.presentation.screens.settings.proxcard.ProximityCardCustomizeRoute
+import me.kavishdevar.librepods.presentation.screens.settings.proxcard.ProximityCardSizeAndPositionRoute
 import me.kavishdevar.librepods.presentation.viewmodel.AppSettingsViewModel
 import me.kavishdevar.librepods.presentation.viewmodel.AppleViewModel
 import me.kavishdevar.librepods.presentation.viewmodel.PurchaseViewModel
@@ -150,7 +156,9 @@ fun RenderScreenContent(
                 navigateToMicrophoneSettings = { navigate(Screen.MicrophoneSettings(screen.macAddress)) },
                 navigateToRecordingScreen = { navigate(Screen.Recording(screen.macAddress)) },
                 navigateToHeartRateScreen = { navigate(Screen.HeartRate(screen.macAddress)) },
-                navigateToDebugScreen = { navigate(Screen.Debug(screen.macAddress)) }
+                navigateToDebugScreen = { navigate(Screen.Debug(screen.macAddress)) },
+                navigateToOverlaySettings = { navigate(Screen.OverlaySettings(screen.macAddress)) },
+                navigateToProxConnectSettings = { navigate(Screen.ProxConnectSettings(screen.macAddress)) }
             )
         }
 
@@ -182,7 +190,9 @@ fun RenderScreenContent(
                 navigateToBleSettingsScreen = { navigate(Screen.BLESettings) },
                 navigateToAppAppearanceScreen = { navigate(Screen.AppAppearance) },
                 navigateToAppAccessibilityScreen = { navigate(Screen.AppAccessibilitySettings) },
-                navigateToIslandSettingsScreen = { navigate(Screen.IslandSettings) }
+                navigateToIslandSettingsScreen = { navigate(Screen.IslandSettings) },
+                navigateToProxCardSizeAndPosition = { navigate(Screen.ProxCardSizeAndPosition) },
+                navigateToProxCardCustomize = { navigate(Screen.ProxCardCustomize) }
             )
         }
 
@@ -454,7 +464,9 @@ fun RenderScreenContent(
             val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
             AppAppearanceSettingsRoute(
                 viewModel = appSettingsViewModel,
-                navigateBack = navigateBack
+                navigateBack = navigateBack,
+                navigateToAppColorSettingsScreen = { navigate(Screen.AppColorSettings) },
+                navigateToHazeSettingsScreen = { navigate(Screen.HazeSettings) }
             )
         }
 
@@ -515,6 +527,77 @@ fun RenderScreenContent(
             IslandExpandedCustomizeRoute(
                 viewModel = appSettingsViewModel,
                 navigateBack = navigateBack
+            )
+        }
+
+        Screen.AppColorSettings -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            AppColorSettingsRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        Screen.HazeSettings -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            HazeSettingsRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        Screen.ProxCardSizeAndPosition -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            ProximityCardSizeAndPositionRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        Screen.ProxCardCustomize -> {
+            val factory = viewModelFactory {
+                initializer { AppSettingsViewModel(appDataRepository = appDataRepository) }
+            }
+            val appSettingsViewModel: AppSettingsViewModel = viewModel(factory = factory)
+            ProximityCardCustomizeRoute(
+                viewModel = appSettingsViewModel,
+                navigateBack = navigateBack
+            )
+        }
+
+        is Screen.OverlaySettings -> {
+            val device = devices[screen.macAddress] as? AppleDevice ?: return
+            val factory = createAppleViewModelFactory(device, appDataRepository, recordingRepository, heartRateRepository)
+            val appleViewModel: AppleViewModel = viewModel(
+                key = "${screen.macAddress.value}:${device.connectionNumber}",
+                factory = factory
+            )
+            OverlaySettingsRoute(
+                viewModel = appleViewModel,
+                navigateBack = navigateBack,
+                navigateToAppSettings = { navigate(Screen.AppSettings) }
+            )
+        }
+
+        is Screen.ProxConnectSettings -> {
+            val device = devices[screen.macAddress] as? AppleDevice ?: return
+            val factory = createAppleViewModelFactory(device, appDataRepository, recordingRepository, heartRateRepository)
+            val appleViewModel: AppleViewModel = viewModel(
+                key = "${screen.macAddress.value}:${device.connectionNumber}",
+                factory = factory
+            )
+            ProxConnectSettingsRoute(
+                viewModel = appleViewModel,
+                navigateBack = navigateBack,
             )
         }
     }

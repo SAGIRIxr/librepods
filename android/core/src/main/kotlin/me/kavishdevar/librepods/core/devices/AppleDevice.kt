@@ -86,6 +86,11 @@ class AppleDevice(
         }
     }
 
+    // should use applestate.state which gives the actual state from proximity instead of creating our own ConnectionSTate.AVAILABLE... well
+    internal fun updateConnectionState(
+        connectionState: ConnectionState
+    ) = _connectionState.update { connectionState }
+
     internal inline fun updateState(
         transform: (AppleState) -> AppleState
     ) {
@@ -161,6 +166,11 @@ class AppleDevice(
     }
 
     override fun disconnect() {
+        _state.update {
+            it.copy(
+                lastDisconnected = System.currentTimeMillis()
+            )
+        }
         _connectionState.update {
             ConnectionState.DISCONNECTING
         }

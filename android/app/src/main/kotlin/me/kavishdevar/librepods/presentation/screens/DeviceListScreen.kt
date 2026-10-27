@@ -68,6 +68,7 @@ import me.kavishdevar.librepods.core.devices.AppleState
 import me.kavishdevar.librepods.core.devices.BaseCapability
 import me.kavishdevar.librepods.core.devices.ConnectionState
 import me.kavishdevar.librepods.core.devices.Device
+import me.kavishdevar.librepods.data.app.DesignSystem
 import me.kavishdevar.librepods.presentation.components.apple.NoiseControlSettings
 import me.kavishdevar.librepods.presentation.components.primitives.StyledIconButton
 import me.kavishdevar.librepods.presentation.components.primitives.StyledList
@@ -76,8 +77,7 @@ import me.kavishdevar.librepods.presentation.components.primitives.StyledListIte
 import me.kavishdevar.librepods.presentation.components.primitives.StyledScaffold
 import me.kavishdevar.librepods.presentation.components.primitives.styledListItem
 import me.kavishdevar.librepods.presentation.components.primitives.styledToggle
-import me.kavishdevar.librepods.presentation.design.DesignSystem
-import me.kavishdevar.librepods.presentation.design.LocalDesignSystem
+import me.kavishdevar.librepods.presentation.design.LocalDesign
 import me.kavishdevar.librepods.presentation.icons.LocalIcons
 import me.kavishdevar.librepods.presentation.utils.createAirPodsBatteryRichText
 import kotlin.math.min
@@ -90,6 +90,7 @@ fun DeviceListScreen(
     navigateToDevice: (MacAddress) -> Unit,
     navigateToHeartRateScreen: (MacAddress) -> Unit
 ) {
+    val design = LocalDesign.current
     val scrollState = rememberScrollState()
 
     val isPremium by BillingManager.provider.isPremium.collectAsState()
@@ -98,8 +99,8 @@ fun DeviceListScreen(
         title = stringResource(R.string.app_name),
         navigateBack = null,
         actionButtons = listOf(
-            { scaffoldBackdrop ->
-                if (LocalDesignSystem.current == DesignSystem.Material) {
+            { hazeInput ->
+                if (design.system == DesignSystem.Material) {
                     FilledTonalIconButton(
                         onClick = navigateToAppSettings,
                         modifier = Modifier
@@ -116,12 +117,13 @@ fun DeviceListScreen(
                 } else {
                     StyledIconButton(
                         onClick = navigateToAppSettings,
-                        backdrop = scaffoldBackdrop
+                        hazeInput = hazeInput
                     ) {
                         Icon(
                             imageVector = LocalIcons.current.Settings,
                             contentDescription = stringResource(R.string.settings),
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(IconButtonDefaults.mediumIconSize)
                         )
                     }
                 }
@@ -148,7 +150,7 @@ fun DeviceListScreen(
                     ConnectionState.CONNECTING -> MaterialShapes.SoftBurst.normalized()
                     ConnectionState.CONNECTED -> MaterialShapes.SoftBurst.normalized()
                     ConnectionState.DISCONNECTING -> MaterialShapes.Cookie4Sided.normalized()
-                    ConnectionState.AVAILABLE -> MaterialShapes.Circle.normalized()
+                    ConnectionState.AVAILABLE -> MaterialShapes.Cookie12Sided.normalized()
                 }
 
                 val connectingShapes = remember {
@@ -284,11 +286,11 @@ fun DeviceListScreen(
 
                 val iconBackgroundColor by animateColorAsState(
                     targetValue = when (connectionState) {
-                        ConnectionState.CONNECTING -> MaterialTheme.colorScheme.secondaryContainer
-                        ConnectionState.CONNECTED -> MaterialTheme.colorScheme.primaryContainer
-                        ConnectionState.DISCONNECTING -> MaterialTheme.colorScheme.surfaceContainer
+                        ConnectionState.CONNECTING,
+                        ConnectionState.DISCONNECTING,
                         ConnectionState.DISCONNECTED -> MaterialTheme.colorScheme.surfaceDim
-                        ConnectionState.AVAILABLE -> MaterialTheme.colorScheme.surfaceBright
+                        ConnectionState.AVAILABLE -> MaterialTheme.colorScheme.secondaryContainer
+                        ConnectionState.CONNECTED -> MaterialTheme.colorScheme.primaryContainer
                     },
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -299,16 +301,13 @@ fun DeviceListScreen(
 
                 val iconColor by animateColorAsState(
                     targetValue = when (connectionState) {
-                        ConnectionState.CONNECTING -> MaterialTheme.colorScheme.onSecondaryContainer
-                        ConnectionState.CONNECTED -> MaterialTheme.colorScheme.onPrimaryContainer
-                        ConnectionState.DISCONNECTING -> MaterialTheme.colorScheme.onSurface
-                        ConnectionState.DISCONNECTED -> MaterialTheme.colorScheme.contentColorFor(
+                        ConnectionState.CONNECTING,
+                        ConnectionState.DISCONNECTING,
+                        ConnectionState.DISCONNECTED -> contentColorFor(
                             MaterialTheme.colorScheme.surfaceDim
                         )
-
-                        ConnectionState.AVAILABLE -> MaterialTheme.colorScheme.contentColorFor(
-                            MaterialTheme.colorScheme.surfaceBright
-                        )
+                        ConnectionState.AVAILABLE -> MaterialTheme.colorScheme.onSecondaryContainer
+                        ConnectionState.CONNECTED -> MaterialTheme.colorScheme.onPrimaryContainer
                     },
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -343,7 +342,7 @@ fun DeviceListScreen(
                                                 CoroutineScope(Dispatchers.IO).launch {
                                                     when (connectionState) {
                                                         ConnectionState.CONNECTED -> device.disconnect()
-                                                        ConnectionState.DISCONNECTED -> device.connect()
+                                                        ConnectionState.AVAILABLE -> device.connect()
                                                         else -> {}
                                                     }
                                                 }
@@ -412,28 +411,6 @@ fun DeviceListScreen(
                         },
                         supportingContent = {
                             when (connectionState) {
-                                ConnectionState.AVAILABLE -> {
-                                    when (deviceState) {
-                                        is AppleState -> {
-//                                        battery from BLE
-                                        }
-
-                                        else -> Text(
-                                            text = "????",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-
-                                ConnectionState.DISCONNECTING, ConnectionState.DISCONNECTED -> {
-                                    Text(
-                                        text = macAddress.value,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
                                 ConnectionState.CONNECTING -> {
                                     Text(
                                         text = stringResource(R.string.connecting),
@@ -442,6 +419,9 @@ fun DeviceListScreen(
                                     )
                                 }
 
+                                ConnectionState.DISCONNECTING,
+                                ConnectionState.DISCONNECTED,
+                                ConnectionState.AVAILABLE,
                                 ConnectionState.CONNECTED -> {
                                     when (deviceState) {
                                         is AppleState -> {
@@ -451,20 +431,29 @@ fun DeviceListScreen(
                                                 val deviceState = deviceState as AppleState
                                                 val deviceMetadata = deviceMetadata as AppleMetadata
 
-                                                val batteryRichText =
-                                                    createAirPodsBatteryRichText(
-                                                        battery = deviceState.battery,
-                                                        airPodsSpec = AirPodsSpecs.getSpec(
-                                                            deviceMetadata.model
-                                                        )
-                                                    )
+                                                if (deviceState.battery.isNotEmpty()) {
 
-                                                Text(
-                                                    text = batteryRichText.text,
-                                                    inlineContent = batteryRichText.inlineContent,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
+                                                    val batteryRichText =
+                                                        createAirPodsBatteryRichText(
+                                                            battery = deviceState.battery,
+                                                            airPodsSpec = AirPodsSpecs.getSpec(
+                                                                deviceMetadata.model
+                                                            )
+                                                        )
+
+                                                    Text(
+                                                        text = batteryRichText.text,
+                                                        inlineContent = batteryRichText.inlineContent,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        text = stringResource(R.string.not_connected),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
                                             }
                                         }
                                     }

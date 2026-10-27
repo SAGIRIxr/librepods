@@ -429,7 +429,6 @@
     <string name="start_recording">開始錄音</string>
     <string name="stop_recording">停止錄音</string>
     <string name="grant_all">全部授權</string>
-    <string name="no_battery_info">沒有可用的電池資訊</string>
     <string name="widget_service_not_available">服務無法使用。請確認 LibrePods 正在執行，然後再試一次。</string>
     <string name="widget_no_devices_found">找不到裝置。請確認已有相容的裝置與手機配對，然後再試一次。</string>
     <string name="battery_short_left">左</string>
